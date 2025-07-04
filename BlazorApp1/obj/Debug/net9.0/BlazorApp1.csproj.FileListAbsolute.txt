@@ -206,3 +206,4 @@ C:\Users\ngqaz\OneDrive\Desktop\C# Exercises\DpCalculator\BlazorApp1\obj\Debug\n
 C:\Users\ngqaz\OneDrive\Desktop\C# Exercises\DpCalculator\BlazorApp1\obj\Debug\net9.0\BlazorApp1.pdb
 C:\Users\ngqaz\OneDrive\Desktop\C# Exercises\DpCalculator\BlazorApp1\obj\Debug\net9.0\BlazorApp1.genruntimeconfig.cache
 C:\Users\ngqaz\OneDrive\Desktop\C# Exercises\DpCalculator\BlazorApp1\obj\Debug\net9.0\ref\BlazorApp1.dll
+C:\Users\ngqaz\OneDrive\Desktop\C# Exercises\DpCalculator\BlazorApp1\obj\Debug\net9.0\BlazorApp1.sourcelink.json
