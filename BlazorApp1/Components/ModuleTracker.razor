@@ -1,0 +1,271 @@
+@page "/"
+@rendermode InteractiveServer
+@inject IDbContextFactory<AppDbContext> DbFactory
+@implements IDisposable
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
+@using BlazorApp1.Data
+@using BlazorApp1.Models
+
+<h1>Dp Tracker</h1>
+
+<button class="btn btn-primary mb-3" @onclick="AddModule">
+    <i class="bi bi-plus-circle"></i> Add Module
+</button>
+
+@if (!isInitialized)
+{
+    <p>Loading...</p>
+}
+else if (!modules.Any())
+{
+    <p>No modules found. Add your first module!</p>
+}
+else
+{
+    @foreach (var module in modules)
+    {
+        <div class="module-card" @key="module.Id">
+            <div class="module-header">
+                <div class="d-flex flex-column flex-md-row w-100">
+                    <input class="form-control module-title me-md-3 mb-2 mb-md-0" 
+                           placeholder="Module name..."
+                           @bind="module.Name" 
+                           @onblur="() => SaveModule(module)" />
+
+                    @if (!expandedModules.Contains(module.Id) && module.Assessments.Any())
+                    {
+                        <div class="d-flex align-items-center text-muted small ms-md-auto">
+                            <span class="me-3">
+                                <strong>Current:</strong> @(module.CurrentAverage?.ToString("0.00") ?? "N/A")%
+                            </span>
+                            <span>
+                                <strong>Target:</strong> @(module.TargetAverage?.ToString("0.00") ?? "Not set")%
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="btn-group mt-2 mt-md-0">
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            title="Expand or collapse module"
+                            @onclick="() => ToggleModule(module)">
+                        <i class="bi @(expandedModules.Contains(module.Id) ? "bi-chevron-up" : "bi-chevron-down")"></i>
+                        @(expandedModules.Contains(module.Id) ? " Collapse" : " Open")
+                    </button>
+                    <button class="btn btn-sm btn-danger" 
+                            title="Delete module"
+                            @onclick="async () => await DeleteModule(module)">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+
+            @if (expandedModules.Contains(module.Id))
+            {
+                <div class="module-body">
+                    <div class="goal-container">
+                        <div class="goal-input">
+                            <label>Target DP:</label>
+                            <input type="number" class="form-control" 
+                                   @bind="module.TargetAverage" 
+                                   @onblur="() => SaveModule(module)" 
+                                   step="0.01" min="0" max="100" />
+                        </div>
+                        
+                        <button class="btn btn-info" @onclick="() => CalculateAverage(module)">
+                            <i class="bi bi-calculator"></i> Calculate
+                        </button>
+                    </div>
+
+                    <table class="table table-sm assessments-table">
+                        <thead>
+                            <tr>
+                                <th>Assessment</th>
+                                <th>Weight (%)</th>
+                                <th>Score</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in module.Assessments)
+                            {
+                                <tr>
+                                    <td><input class="form-control" @bind="a.Name" @onblur="() => SaveAssessment(a)" /></td>
+                                    <td><input type="number" class="form-control" @bind="a.Weight" @onblur="() => SaveAssessment(a)" /></td>
+                                    <td><input type="number" class="form-control" @bind="a.Score" @onblur="() => SaveAssessment(a)" /></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" 
+                                                @onclick="async () => await DeleteAssessment(a)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                    
+                    <button class="btn btn-outline-primary btn-sm" 
+                            @onclick="async () => await AddAssessment(module)">
+                        <i class="bi bi-plus"></i> Add Assessment
+                    </button>
+                    
+                    @if (module.Assessments.Any())
+                    {
+                        <div class="average-display mt-3">
+                            <div class="current-average @GetStatusClass(module)">
+                                Current: @(module.CurrentAverage?.ToString("0.00") ?? "N/A")%
+                            </div>
+                            <div class="target-average">
+                                Target: @(module.TargetAverage?.ToString("0.00") ?? "Not set")%
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<Module> modules = new();
+    private HashSet<int> expandedModules = new();
+    private bool isInitialized;
+    private bool isDisposed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadModules();
+        }
+        finally
+        {
+            isInitialized = true;
+        }
+    }
+
+    private async Task LoadModules()
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        modules = await context.Modules
+            .Include(m => m.Assessments)
+            .OrderBy(m => m.Name)
+            .ToListAsync();
+    }
+
+    private async Task SaveModule(Module module)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        if (module.Id == 0)
+        {
+            context.Modules.Add(module);
+        }
+        else
+        {
+            context.Modules.Update(module);
+        }
+        await context.SaveChangesAsync();
+    }
+
+    private async Task SaveAssessment(Assessment assessment)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        if (assessment.Id == 0)
+        {
+            context.Assessments.Add(assessment);
+        }
+        else
+        {
+            context.Assessments.Update(assessment);
+        }
+        await context.SaveChangesAsync();
+    }
+
+    private async Task AddModule()
+    {
+        var newModule = new Module { Name = "New Module" };
+        modules.Add(newModule);
+        expandedModules.Add(newModule.Id);
+        await SaveModule(newModule);
+    }
+
+    private async Task AddAssessment(Module module)
+    {
+        var newAssessment = new Assessment
+        {
+            Name = "New Assessment",
+            Weight = 30,
+            Score = 0,
+            ModuleId = module.Id
+        };
+        module.Assessments.Add(newAssessment);
+        await SaveAssessment(newAssessment);
+    }
+
+    private async Task DeleteModule(Module module)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        context.Modules.Remove(module);
+        await context.SaveChangesAsync();
+        modules.Remove(module);
+        expandedModules.Remove(module.Id);
+    }
+
+    private async Task DeleteAssessment(Assessment assessment)
+    {
+        using var context = await DbFactory.CreateDbContextAsync();
+        context.Assessments.Remove(assessment);
+        await context.SaveChangesAsync();
+        
+        var module = modules.FirstOrDefault(m => m.Assessments.Contains(assessment));
+        module?.Assessments.Remove(assessment);
+    }
+
+    private void ToggleModule(Module module)
+    {
+        if (expandedModules.Contains(module.Id))
+        {
+            expandedModules.Remove(module.Id);
+        }
+        else
+        {
+            expandedModules.Add(module.Id);
+        }
+    }
+
+    private void CalculateAverage(Module module)
+    {
+        if (module.Assessments.Count == 0)
+        {
+            module.CurrentAverage = null;
+            return;
+        }
+
+        var totalWeight = module.Assessments.Sum(a => a.Weight);
+        if (totalWeight == 0)
+        {
+            module.CurrentAverage = null;
+            return;
+        }
+
+        module.CurrentAverage = module.Assessments.Sum(a => (a.Weight * a.Score) / totalWeight);
+    }
+
+    private string GetStatusClass(Module module)
+    {
+        if (!module.CurrentAverage.HasValue || !module.TargetAverage.HasValue)
+            return string.Empty;
+
+        return module.CurrentAverage >= module.TargetAverage ? "passing" : "failing";
+    }
+
+    public void Dispose()
+    {
+        if (!isDisposed)
+        {
+            // Cleanup any resources if needed
+            isDisposed = true;
+        }
+    }
+}

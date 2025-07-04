@@ -1,0 +1,119 @@
+.module-card {
+    border: none;
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.module-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: #f1f3f5;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.module-title {
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: #343a40;
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.module-body {
+    padding: 1.5rem;
+}
+
+.goal-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
+}
+
+.goal-input input,
+.goal-input select,
+.goal-input textarea {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.goal-input input:focus,
+.goal-input select:focus,
+.goal-input textarea:focus {
+    border-color: #0d6efd;
+    outline: none;
+}
+
+.assessments-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.assessments-table th,
+.assessments-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.assessments-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.average-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    font-size: 1.1rem;
+}
+
+.current-average {
+    font-weight: 700;
+    color: #212529;
+}
+
+.target-average {
+    color: #6c757d;
+}
+
+.passing {
+    color: #198754;
+    font-weight: 600;
+}
+
+.failing {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Responsive tweak */
+@media (max-width: 600px) {
+    .goal-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .average-display {
+        flex-direction: column;
+    }
+}
